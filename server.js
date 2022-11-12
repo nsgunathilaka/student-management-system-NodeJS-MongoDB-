@@ -21,8 +21,15 @@ app.use(
   })
 );
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8083;
 
+// Routes
+
+app.get("/", (req, res) => {
+    res.send("Hi from API")
+});
+
+// connect to mongoDB and start server
 mongoose
   .connect(process.env.MONGO_URI)
   .then(() => {
