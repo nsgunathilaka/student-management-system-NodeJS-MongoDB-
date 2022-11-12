@@ -28,7 +28,7 @@ const registerStudent = asyncHandler(async (req, res) => {
         batch,
         email,
         phone,
-        password: encryptedPassword
+        password
     });
 
     if (student) {
