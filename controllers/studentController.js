@@ -1,5 +1,12 @@
 const asyncHandler = require("express-async-handler");
 const Student = require("../models/studentModel");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
+
+
+const generateToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+};
 
 const registerStudent = asyncHandler(async (req, res) => {
 
@@ -31,12 +38,25 @@ const registerStudent = asyncHandler(async (req, res) => {
         password
     });
 
+    //generate token
+    const token = generateToken(student._id)  //_id <= this because in the mongodb database id property like this.
+
+    // send http-only cookie
+    res.cookie("token", token, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 86400), //one day
+        sameSite: "none",
+        secure: true
+    });
+
     if (student) {
         res.status(200).json({
-            _id: student.id,
+            id: student._id,
             name: student.name,
-            email: student.email
-        })
+            email: student.email,
+            token,
+        });
     } else {
         res.status(400)
         throw new Error("Invalid student data!")
@@ -44,6 +64,59 @@ const registerStudent = asyncHandler(async (req, res) => {
 });
 
 
+
+const login = asyncHandler(async (req, res) => {
+    const { email, password } = req.body;
+
+    if(!email || !password) {
+        res.status(400)
+        throw new Error("Please fill all required fields")
+    }
+
+    //check user availability
+    const studentExists = await Student.findOne({email});
+    
+    if(!studentExists) {
+        res.status(400)
+        throw new Error("User not found.Please create a new account")
+    }
+
+    // check password is correct or not
+    const passwordIsValid = await bcrypt.compare(password, studentExists.password);
+
+    //generate token
+    const token = generateToken(studentExists._id);
+
+    // send http-only cookie
+    res.cookie("token", token, {
+        path: "/",
+        httpOnly: true,
+        expires: new Date(Date.now() + 1000 * 86400), //one day
+        sameSite: "none",
+        secure: true
+    });
+
+    if(studentExists && passwordIsValid) {
+        res.status(200).json({
+            id: studentExists._id,
+            name: studentExists.name,
+            faculty: studentExists.faculty,
+            batch: studentExists.batch,
+            phone: studentExists.phone,
+            email: studentExists.email,
+            avatar : studentExists.avatar,
+            bio: studentExists.bio,
+            token
+        });
+    } else {
+        res.status(400)
+        throw new Error("Invalid email or password. Please try again later.")
+    }
+
+});
+
+
 module.exports = {
-    registerStudent
+    registerStudent,
+    login
 }
