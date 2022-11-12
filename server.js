@@ -5,6 +5,9 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const errorHandler = require("./middleWare/errorMiddleware");
+
+const studentRoute = require("./routes/studentRoute")
 
 const app = express();
 
@@ -21,6 +24,10 @@ app.use(
   })
 );
 
+
+// Routes middleware
+app.use("/api/students", studentRoute);
+
 const PORT = process.env.PORT || 8083;
 
 // Routes
@@ -28,6 +35,10 @@ const PORT = process.env.PORT || 8083;
 app.get("/", (req, res) => {
     res.send("Hi from API")
 });
+
+//error middleware
+app.use(errorHandler);
+
 
 // connect to mongoDB and start server
 mongoose

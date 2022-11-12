@@ -1,4 +1,5 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
 
 const studentSchema = mongoose.Schema({
 
@@ -16,7 +17,7 @@ const studentSchema = mongoose.Schema({
     },
     phone: {
         type: String,
-        default: "+94"
+        required: [true, "Please enter phone number"]
     },
     email: {
         type: String,
@@ -36,13 +37,12 @@ const studentSchema = mongoose.Schema({
     bio: {
         type: String,
         maxLength: [250, "Bio should not be more than 250 characters"],
-        default: "+94"
+        default: "I am a student"
     },
     password: {
         type: String,
         required: [true, "Please enter password"],
-        minLength: [6, "Password should be up to 6 characters"],
-        maxLength: [8, "Password should not be more than 8 characters"]
+        minLength: [6, "Password should be up to 6 characters"]
     },
 },
     {
