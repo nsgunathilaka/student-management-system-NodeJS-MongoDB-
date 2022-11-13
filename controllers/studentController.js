@@ -45,9 +45,9 @@ const registerStudent = asyncHandler(async (req, res) => {
     res.cookie("token", token, {
         path: "/",
         httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 86400), //one day
+        expires: new Date(Date.now() + 1000 * 86400), // 1 day
         sameSite: "none",
-        secure: true
+        secure: true,
     });
 
     if (student) {
@@ -68,15 +68,15 @@ const registerStudent = asyncHandler(async (req, res) => {
 const login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
 
-    if(!email || !password) {
+    if (!email || !password) {
         res.status(400)
         throw new Error("Please fill all required fields")
     }
 
     //check user availability
-    const studentExists = await Student.findOne({email});
-    
-    if(!studentExists) {
+    const studentExists = await Student.findOne({ email });
+
+    if (!studentExists) {
         res.status(400)
         throw new Error("User not found.Please create a new account")
     }
@@ -96,7 +96,7 @@ const login = asyncHandler(async (req, res) => {
         secure: true
     });
 
-    if(studentExists && passwordIsValid) {
+    if (studentExists && passwordIsValid) {
         res.status(200).json({
             id: studentExists._id,
             name: studentExists.name,
@@ -104,7 +104,7 @@ const login = asyncHandler(async (req, res) => {
             batch: studentExists.batch,
             phone: studentExists.phone,
             email: studentExists.email,
-            avatar : studentExists.avatar,
+            avatar: studentExists.avatar,
             bio: studentExists.bio,
             token
         });
@@ -116,7 +116,54 @@ const login = asyncHandler(async (req, res) => {
 });
 
 
+const logOut = asyncHandler(async (req, res) => {
+    res.clearCookie('token');
+
+    return res.status(200).json({ message: 'Successfully logged out!' })
+});
+
+
+const getStudent = asyncHandler(async (req, res) => {
+    const student = await Student.findById(req.student._id)
+
+    if (student) {
+        res.status(200).json({
+            id: student._id,
+            name: student.name,
+            faculty: student.faculty,
+            batch: student.batch,
+            phone: student.phone,
+            email: student.email,
+            avatar: student.avatar,
+            bio: student.bio,
+        });
+    } else {
+        res.status(404)
+        throw new Error("User Not Found!")
+    }
+
+});
+
+const loginStatus = asyncHandler(async (req, res) => {
+
+    const token = req.cookies.token;
+    if (!token) {
+        return res.json(false);
+    }
+
+    //verify token
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    if (verified) {
+        return res.json(true)
+    }
+    return res.json(false);
+
+});
+
 module.exports = {
     registerStudent,
-    login
+    login,
+    logOut,
+    getStudent,
+    loginStatus
 }
