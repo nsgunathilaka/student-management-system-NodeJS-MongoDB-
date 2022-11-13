@@ -283,6 +283,31 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 
+const resetPassword = asyncHandler(async(req, res) => {
+
+    const {password} = req.body;
+    const {resetToken} = req.params;
+
+    const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+    const studentToken = await Token.findOne({token:hashedToken, expiresAt:{$gt:Date.now()}}) //gt = greater than
+
+    if(!studentToken) {
+        res.status(404)
+        throw new Error("Invalid or Expired Token")
+    }
+
+    const student = await Student.findOne({_id : studentToken.userId})
+    student.password = password
+    await student.save()
+    res.status(200).json({message:"Password Reset Successfully"})
+
+});
+
+
 
 module.exports = {
     registerStudent,
@@ -292,5 +317,6 @@ module.exports = {
     loginStatus,
     updateStudent,
     changePassword,
-    forgotPassword
+    forgotPassword,
+    resetPassword
 }
