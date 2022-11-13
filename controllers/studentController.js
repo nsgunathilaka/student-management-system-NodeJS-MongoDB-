@@ -160,10 +160,69 @@ const loginStatus = asyncHandler(async (req, res) => {
 
 });
 
+
+const updateStudent = asyncHandler(async (req, res) => {
+    const student = await Student.findById(req.student._id);
+
+    if (student) {
+
+        const { name, faculty, batch, phone, email, avatar, bio } = student;
+
+        student.name = req.body.name || name;
+        student.faculty = req.body.faculty || faculty;
+        student.batch = req.body.batch || batch;
+        student.phone = req.body.phone || phone;
+        student.email = email; //doesn't allow change email address to user
+        student.avatar = req.body.avatar || avatar;
+        student.bio = req.body.bio || bio;
+
+        const updatedStudent = await Student.save();
+        res.status(200).json("Profile data updated successfully!")
+    } else {
+        res.status(400)
+        throw new Error("User Not Found")
+    }
+
+});
+
+
+const changePassword = asyncHandler(async (req, res) => {
+
+    const student = await Student.findById(req.student._id)
+
+    if (student) {
+
+        if (!req.body.newPassword || !req.body.oldPassword) {
+
+            const passwordIsValid = await bcrypt.compare(req.body.newPassword, student.password);
+
+            if (passwordIsValid) {
+                student.password = req.body.newPassword;
+                await student.save()
+                res.status(200).json("Password updated successfully!")
+            } else {
+                res.status(400)
+                throw new Error("Password doesn't match!")
+            }
+        }
+
+        else {
+            res.status(400)
+            throw new Error("Please enter old password and new password")
+        }
+
+
+    } else {
+        res.status(400).json("User Not Found!")
+    }
+});
+
 module.exports = {
     registerStudent,
     login,
     logOut,
     getStudent,
-    loginStatus
+    loginStatus,
+    updateStudent,
+    changePassword
 }
